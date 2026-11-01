@@ -413,9 +413,10 @@ static void hurt_touch(edict_t *self, edict_t *other, cplane_t *plane, csurface_
     else
         self->timestamp = level.framenum + 0.1f * HZ;
 
-    if (!(self->spawnflags & 4)) {
-        if ((level.framenum % HZ) == 0)
-            gi.sound(other, CHAN_AUTO, self->noise_index, 1, ATTN_NORM, 0);
+    // the sound has its own 1 s cooldown, whatever the contact phase
+    if (!(self->spawnflags & 4) && self->fly_sound_debounce_framenum <= level.framenum) {
+        self->fly_sound_debounce_framenum = level.framenum + 1 * HZ;
+        gi.sound(other, CHAN_AUTO, self->noise_index, 1, ATTN_NORM, 0);
     }
 
     if (self->spawnflags & 8)

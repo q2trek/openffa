@@ -435,7 +435,7 @@ static void target_laser_think(edict_t *self)
 
     VectorCopy(tr.endpos, self->s.old_origin);
 
-    self->nextthink = level.framenum + 1;
+    self->nextthink = level.framenum + FRAMEDIV;   // 100 ms beam (damage) period
 }
 
 static void target_laser_on(edict_t *self)

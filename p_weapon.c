@@ -467,7 +467,8 @@ static void weapon_grenade_fire(edict_t *ent, bool held)
     P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
 
     timer = ent->client->grenade_framenum - level.framenum;
-    speed = GRENADE_MINSPEED + (GRENADE_TIMER - timer) * ((GRENADE_MAXSPEED - GRENADE_MINSPEED) / GRENADE_TIMER);
+    // the 10 Hz curve: integer 400 / 30 = 13 units/s per 100 ms held
+    speed = GRENADE_MINSPEED + (GRENADE_TIMER - timer) * ((GRENADE_MAXSPEED - GRENADE_MINSPEED) / (3 * BASE_FRAMERATE)) / FRAMEDIV;
     fire_grenade2(ent, start, forward, damage, speed, timer, radius, held);
 
     if (!DF(INFINITE_AMMO))
@@ -538,7 +539,7 @@ void Weapon_Grenade(edict_t *ent)
 
         if (ent->client->weaponframe == 11) {
             if (!ent->client->grenade_framenum) {
-                ent->client->grenade_framenum = level.framenum + GRENADE_TIMER + 2;
+                ent->client->grenade_framenum = level.framenum + GRENADE_TIMER + 2 * FRAMEDIV; // 3.2 s
                 ent->client->weapon_sound = gi.soundindex("weapons/hgrenc1b.wav");
             }
 
