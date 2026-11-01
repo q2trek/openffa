@@ -28,6 +28,7 @@ static byte     is_silenced;
 
 
 static void weapon_grenade_fire(edict_t *ent, bool held);
+void Weapon_Grenade(edict_t *ent);
 
 
 static void P_ProjectSource(gclient_t *client, vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result)
@@ -207,10 +208,16 @@ Called by ClientBeginServerFrame and ClientThink
 */
 void Think_Weapon(edict_t *ent)
 {
+    bool pending = ent->client->attack_pending;
+    int buttons, latched;
+
+    ent->client->attack_pending = false;
+
     // if just died, put the weapon away
     if (ent->health < 1) {
         ent->client->newweapon = NULL;
         ChangeWeapon(ent);
+        pending = false;
     }
 
     if (level.match_state == MS_COUNTDOWN)
@@ -223,7 +230,19 @@ void Think_Weapon(edict_t *ent)
             is_silenced = MZ_SILENCED;
         else
             is_silenced = 0;
+        // a pending press is seen by this call only, as if still held
+        // (machinegun/hyperblaster read the live buttons)
+        buttons = ent->client->buttons;
+        latched = ent->client->latched_buttons;
+        if (pending) {
+            // Grenade cooking follows the real hold/release, not a pending tap.
+            if (ent->client->weapon->weaponthink != Weapon_Grenade)
+                ent->client->buttons |= BUTTON_ATTACK;
+            ent->client->latched_buttons |= BUTTON_ATTACK;
+        }
         ent->client->weapon->weaponthink(ent);
+        ent->client->buttons = buttons;
+        ent->client->latched_buttons &= latched | ~BUTTON_ATTACK;
     }
 }
 

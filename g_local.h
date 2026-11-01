@@ -1161,6 +1161,7 @@ struct gclient_s {
     int         latched_buttons;
 
     bool        weapon_thunk;
+    bool        attack_pending; // press after this 100 ms step's weapon call
 
     gitem_t     *newweapon;
 
