@@ -147,6 +147,7 @@ static void AccelMove_Begin(edict_t *ent);
 static void Move_Calc(edict_t *ent, void(*func)(edict_t*))
 {
     VectorClear(ent->velocity);
+    VectorClear(ent->push_carry);   // a new path: no remainder of the old one
     ent->moveinfo.endfunc = func;
 
     if (ent->flags & FL_ACCELERATE) {

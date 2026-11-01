@@ -1378,6 +1378,7 @@ struct edict_s {
 
     // common data blocks
     moveinfo_t      moveinfo;
+    vec3_t      push_carry;     // SV_Push 1/8 quantization remainder, in 1/8 units
 
     // hack for proper s.old_origin updates
     vec3_t      old_origin;

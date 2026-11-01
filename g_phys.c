@@ -235,6 +235,7 @@ typedef struct {
     edict_t *ent;
     vec3_t  origin;
     vec3_t  angles;
+    vec3_t  carry;
 #if USE_SMOOTH_DELTA_ANGLES
     int     deltayaw;
 #endif
@@ -258,14 +259,20 @@ static bool SV_Push(edict_t *pusher, vec3_t move, vec3_t amove)
     edict_t     *check, *block;
     vec3_t      mins, maxs;
     pushed_t    *p;
-    vec3_t      org, org2, move2, forward, right, up;
+    vec3_t      org, org2, move2, forward, right, up, carry;
 
     // clamp the move to 1/8 units, so the position will
-    // be accurate for client side prediction
+    // be accurate for client side prediction; the rounding remainder
+    // is carried to the next move of this path (part of the push
+    // transaction, restored on a block)
+    VectorCopy(pusher->push_carry, carry);
     for (i = 0; i < 3; i++) {
         float   temp;
-        temp = move[i] * 8.0f;
-        move[i] = 0.125f * Q_rint(temp);
+        int     r;
+        temp = move[i] * 8.0f + pusher->push_carry[i];
+        r = Q_rint(temp);
+        pusher->push_carry[i] = temp - r;
+        move[i] = 0.125f * r;
     }
 
     // find the bounding box
@@ -282,6 +289,7 @@ static bool SV_Push(edict_t *pusher, vec3_t move, vec3_t amove)
     pushed_p->ent = pusher;
     VectorCopy(pusher->s.origin, pushed_p->origin);
     VectorCopy(pusher->s.angles, pushed_p->angles);
+    VectorCopy(carry, pushed_p->carry);
 #if USE_SMOOTH_DELTA_ANGLES
     if (pusher->client)
         pushed_p->deltayaw = pusher->client->ps.pmove.delta_angles[YAW];
@@ -328,6 +336,7 @@ static bool SV_Push(edict_t *pusher, vec3_t move, vec3_t amove)
             pushed_p->ent = check;
             VectorCopy(check->s.origin, pushed_p->origin);
             VectorCopy(check->s.angles, pushed_p->angles);
+            VectorCopy(check->push_carry, pushed_p->carry);
 #if USE_SMOOTH_DELTA_ANGLES
             if (check->client)
                 pushed_p->deltayaw = check->client->ps.pmove.delta_angles[YAW];
@@ -384,6 +393,7 @@ static bool SV_Push(edict_t *pusher, vec3_t move, vec3_t amove)
             p = &pushed[i];
             VectorCopy(p->origin, p->ent->s.origin);
             VectorCopy(p->angles, p->ent->s.angles);
+            VectorCopy(p->carry, p->ent->push_carry);
 #if USE_SMOOTH_DELTA_ANGLES
             if (p->ent->client) {
                 p->ent->client->ps.pmove.delta_angles[YAW] = p->deltayaw;
