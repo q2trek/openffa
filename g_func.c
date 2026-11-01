@@ -441,7 +441,8 @@ static void plat_blocked(edict_t *self, edict_t *other)
         return;
     }
 
-    T_Damage(other, self, self, vec3_origin, other->s.origin, vec3_origin, self->dmg, 1, 0, MOD_CRUSH);
+    if (G_CrushAllowed(self, other))
+        T_Damage(other, self, self, vec3_origin, other->s.origin, vec3_origin, self->dmg, 1, 0, MOD_CRUSH);
 
     if (self->moveinfo.state == STATE_UP)
         plat_go_down(self);
@@ -619,7 +620,8 @@ STOP mean it will stop moving instead of pushing entities
 
 static void rotating_blocked(edict_t *self, edict_t *other)
 {
-    T_Damage(other, self, self, vec3_origin, other->s.origin, vec3_origin, self->dmg, 1, 0, MOD_CRUSH);
+    if (G_CrushAllowed(self, other))
+        T_Damage(other, self, self, vec3_origin, other->s.origin, vec3_origin, self->dmg, 1, 0, MOD_CRUSH);
 }
 
 static void rotating_touch(edict_t *self, edict_t *other, cplane_t *plane, csurface_t *surf)
@@ -1100,7 +1102,8 @@ static void door_blocked(edict_t *self, edict_t *other)
         return;
     }
 
-    T_Damage(other, self, self, vec3_origin, other->s.origin, vec3_origin, self->dmg, 1, 0, MOD_CRUSH);
+    if (G_CrushAllowed(self, other))
+        T_Damage(other, self, self, vec3_origin, other->s.origin, vec3_origin, self->dmg, 1, 0, MOD_CRUSH);
 
     if (self->spawnflags & DOOR_CRUSHER)
         return;

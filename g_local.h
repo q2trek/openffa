@@ -424,6 +424,8 @@ typedef enum {
     MS_INTERMISSION
 } match_state_t;
 
+#define MAX_CRUSH   64
+
 //
 // this structure is cleared as each map is entered
 //
@@ -512,6 +514,12 @@ typedef struct {
 
     edict_t     *current_entity;    // entity running from G_RunFrame
     int         body_que;           // dead bodies
+
+    // world-driven continuous crush: next damage frame of each source/victim pair
+    struct {
+        edict_t *self, *other;
+        int     framenum;
+    } crush[MAX_CRUSH];
 } level_locals_t;
 
 
@@ -796,6 +804,7 @@ void    G_SetMovedir(vec3_t angles, vec3_t movedir);
 void    G_InitEdict(edict_t *e);
 edict_t *G_Spawn(void);
 void    G_FreeEdict(edict_t *e);
+bool    G_CrushAllowed(edict_t *self, edict_t *other);
 
 void    G_TouchTriggers(edict_t *ent);
 //void  G_TouchSolids (edict_t *ent);
@@ -1335,6 +1344,7 @@ struct edict_s {
     edict_t     *activator;
     edict_t     *groundentity;
     int         groundentity_linkcount;
+    int         crush_framenum;     // G_CrushAllowed on a full table: next damage frame of this victim
     edict_t     *teamchain;
     edict_t     *teammaster;
 
