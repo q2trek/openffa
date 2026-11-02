@@ -12,6 +12,42 @@ support, high scores logging, ‘proper’ in-eyes chasecam support. Besides tha
 OpenFFA fixes many gameplay bugs and annoyances original Quake 2 game library
 has.
 
+Tick rates from 10 to 60 Hz in this fork
+----------------------------------------
+
+This is q2trek/openffa. Its `tickrate` branch is upstream `master` plus the
+tick rate commits, which keep gameplay consistent across server frame rates, and
+`master` follows upstream unchanged. Build it with
+`make CONFIG_VARIABLE_SERVER_FPS=y` and set `sv_fps` to 10, 20, 30, 40, 50 or
+60 (see <<server-configuration,Server configuration>>). The engine must be
+built with variable FPS (Q2PRO nightly builds are). For exact frame timing at
+30 and 60 Hz, run it on the engine from q2trek/q2pro.
+
+What the branch changes:
+
+- Crush damage from doors, plats, rotating brushes and func_object hits a
+  victim at most once per 0.1 s from each source.
+- Movers carry their 1/8 unit rounding remainder into the next move, so they
+  keep the right speed and stay on their path.
+- A player standing on a mover keeps it as ground in frames without a
+  usercmd (a movement packet from the client), so a descending lift no longer drops them.
+- A second attack tap within one 100 ms weapon step fires on the next step
+  instead of being lost.
+- The hand grenade fuse and throw speed, the target_laser damage and the
+  trigger_hurt sound are timed in seconds, not frames.
+
+The same code also changes a few things at 10 Hz:
+
+- The trigger_hurt sound plays on the first contact, and for a trigger_hurt with the SLOW flag on
+  every hit, instead of only on frames divisible by 10.
+- Moves that aren't whole multiples of 1/8 unit keep their exact average
+  speed.
+- A player on a mover keeps it as ground in frames without a usercmd.
+- A second attack press within one 100 ms frame fires one machinegun or
+  hyperblaster shot on the next step.
+- When more than 64 crush pairs (source and victim) are active within 0.1 s,
+  a second source crushing the same victim in that time loses its hit.
+
 Client commands
 ---------------
 
@@ -135,10 +171,14 @@ settings::
     Show match settings.
 
 
+[[server-configuration]]
 Server configuration
 --------------------
 
-Custom OpenFFA cvars are described below.
+Custom OpenFFA cvars are described below. `sv_fps` is an engine cvar. In a
+`CONFIG_VARIABLE_SERVER_FPS=y` build on an engine with variable FPS, OpenFFA
+accepts 10, 20, 30, 40, 50 or 60 and stops with an error on any other value.
+Without engine support `sv_fps` is ignored and the game runs at 10 Hz.
 
 g_idle_time::
     Time, in seconds, after which inactive players are removed from the game.
