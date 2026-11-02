@@ -633,7 +633,8 @@ void bfg_touch(edict_t *self, edict_t *other, cplane_t *plane, csurface_t *surf)
     gi.sound(self, CHAN_VOICE, gi.soundindex("weapons/bfg__x1b.wav"), 1, ATTN_NORM, 0);
     self->solid = SOLID_NOT;
     self->touch = NULL;
-    VectorMA(self->s.origin, -1 * FRAMETIME, self->velocity, self->s.origin);
+    // back off 100 ms of flight, as at 10 Hz: the secondary explosion hurts from there
+    VectorMA(self->s.origin, -0.1f, self->velocity, self->s.origin);
     VectorClear(self->velocity);
     self->s.modelindex = gi.modelindex("sprites/s_bfg3.sp2");
     self->s.frame = 0;
