@@ -38,8 +38,8 @@ What the branch changes:
 - A second attack tap within one 100 ms weapon step fires on the next step
   instead of being lost.
 - The hand grenade fuse and throw speed, the target_laser damage, the
-  trigger_hurt sound and the point the BFG explosion hurts from are timed in
-  seconds, not frames.
+  trigger_hurt sound, the point the BFG explosion hurts from and the roll of a
+  falling viper bomb are timed in seconds, not frames.
 
 The same code also changes a few things at 10 Hz:
 
