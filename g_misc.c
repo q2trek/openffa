@@ -812,7 +812,7 @@ static void misc_viper_bomb_prethink(edict_t *self)
 
     diff = self->s.angles[2];
     vectoangles(v, self->s.angles);
-    self->s.angles[2] = diff + 10;
+    self->s.angles[2] = diff + 100.0f * FRAMETIME;    // 10 degrees per 100 ms
 }
 
 static void misc_viper_bomb_use(edict_t *self, edict_t *other, edict_t *activator)
