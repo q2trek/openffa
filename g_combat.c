@@ -288,7 +288,7 @@ void T_Damage(edict_t *targ, edict_t *inflictor, edict_t *attacker, const vec3_t
     // figure momentum add
     if (!(dflags & DAMAGE_NO_KNOCKBACK)) {
         if ((knockback) && (targ->movetype != MOVETYPE_NONE) && (targ->movetype != MOVETYPE_BOUNCE) && (targ->movetype != MOVETYPE_PUSH) && (targ->movetype != MOVETYPE_STOP)) {
-            vec3_t  temp;
+            vec3_t  temp = { 0 };   // stays zero for a zero dir (hurt, crush)
             float   mass;
             float   push;
 

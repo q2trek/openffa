@@ -29,6 +29,8 @@ What the branch changes:
 
 - Crush damage from doors, plats, rotating brushes and func_object hits a
   victim at most once per 0.1 s from each source.
+- Damage without a direction (trigger_hurt, crushing) no longer pushes the
+  victim.
 - Movers carry their 1/8 unit rounding remainder into the next move, so they
   keep the right speed and stay on their path.
 - A player standing on a mover keeps it as ground in frames without a
@@ -49,6 +51,7 @@ The same code also changes a few things at 10 Hz:
   hyperblaster shot on the next step.
 - When more than 64 crush pairs (source and victim) are active within 0.1 s,
   a second source crushing the same victim in that time loses its hit.
+- Damage without a direction no longer gives a random push.
 
 Client commands
 ---------------
