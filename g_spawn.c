@@ -637,6 +637,7 @@ void G_ResetLevel(void)
     // free all edicts
     for (i = 0; i < globals.num_edicts; i++) {
         ent = &g_edicts[i];
+        ent->crush_framenum = 0;    // player and body slots keep their fields, the frame counter restarts
         if (ent->inuse) {
             G_FreeEdict(ent);
         }
