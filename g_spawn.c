@@ -628,7 +628,7 @@ void G_ResetLevel(void)
     level.time = 0;
     level.intermission_framenum = 0;
     level.intermission_exit = 0;
-    level.vote.proposal = 0;
+    level.vote.framenum = 0;  // G_FinishVote cleared the proposal
     level.nextmap[0] = 0;
     level.record = 0;
     level.players_in = level.players_out = 0;
