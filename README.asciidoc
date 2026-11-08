@@ -20,7 +20,7 @@ rate commits, which keep gameplay consistent across server frame rates (also
 kept on the `tickrate` branch), and the bug fixes listed below. Build it with
 `make CONFIG_VARIABLE_SERVER_FPS=y` and set `sv_fps` to 10, 20, 30, 40, 50 or
 60 (see <<server-configuration,Server configuration>>). The engine must be
-built with variable FPS (Q2PRO nightly builds are). For exact frame timing at
+built with the `variable-fps` meson option (the Q2PRO nightly builds are not). For exact frame timing at
 30 and 60 Hz, run it on the engine from q2trek/q2pro. The tests for these
 commits, at every rate from 10 to 60 Hz, are in
 https://github.com/q2trek/tickrate-tests[q2trek/tickrate-tests].
