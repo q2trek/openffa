@@ -27,6 +27,10 @@ https://github.com/q2trek/tickrate-tests[q2trek/tickrate-tests].
 
 What the tick rate commits change:
 
+- A configured `sv_fps` cannot enable variable FPS on an engine without it;
+  the game stays at 10 Hz. The rate tests also cover this engine capability
+  boundary alongside OpenTDM.
+
 - Crush damage from doors, plats, rotating brushes and func_object hits a
   victim at most once per 0.1 s from each source.
 - Damage without a direction (trigger_hurt, crushing) no longer pushes the
