@@ -166,23 +166,15 @@ static int ClipVelocity(vec3_t in, vec3_t normal, vec3_t out, float overbounce)
 }
 
 /*
-============
-SV_AddGravity
-
-============
-*/
-static void SV_AddGravity(edict_t *ent)
-{
-    ent->velocity[2] -= ent->gravity * sv_gravity->value * FRAMETIME;
-}
-
-/*
 ===============================================================================
 
 PUSHMOVE
 
 ===============================================================================
 */
+
+// FRAMEDIV gives the world-frame count for the 100 ms classic physics step.
+#define TOSS_STEP_TIME 0.1f
 
 /*
 ============
@@ -191,15 +183,28 @@ SV_PushEntity
 Does not change the entities velocity at all
 ============
 */
-static trace_t SV_PushEntity(edict_t *ent, vec3_t push)
+static trace_t SV_PushEntity(edict_t *ent, int remaining, int step_frames)
 {
     trace_t trace;
     vec3_t  start;
-    vec3_t  end;
+    vec3_t  end, move;
     int     mask;
 
     VectorCopy(ent->s.origin, start);
-    VectorAdd(start, push, end);
+    // Reuse the endpoint unless something moved or accelerated the object between frames.
+    if (remaining < step_frames && VectorCompare(start, ent->toss_origin) &&
+        VectorCompare(ent->velocity, ent->toss_velocity)) {
+        VectorCopy(ent->toss_end, end);
+    } else {
+        // Account for rounding in the world's frame duration at the classic boundary.
+        float correction = step_frames > 1 ? TOSS_STEP_TIME - FRAMETIME * step_frames : 0;
+        VectorScale(ent->velocity, correction + FRAMETIME * remaining, move);
+        VectorAdd(start, move, end);
+        if (remaining > 1) {
+            VectorCopy(end, ent->toss_end);
+            VectorCopy(ent->velocity, ent->toss_velocity);
+        }
+    }
 
 retry:
     if (ent->clipmask)
@@ -208,7 +213,14 @@ retry:
         mask = MASK_SOLID;
 
     trace = gi.trace(start, ent->mins, ent->maxs, end, ent, mask);
+    // Look ahead to the classic step's endpoint, but take only hits within this world frame.
+    if (remaining > 1 && trace.fraction * remaining > 1.0f) {
+        VectorMA(end, -FRAMETIME * (remaining - 1), ent->velocity, trace.endpos);
+        trace.fraction = 1.0f;
+    }
 
+    if (remaining > 1)
+        VectorCopy(trace.endpos, ent->toss_origin);
     VectorCopy(trace.endpos, ent->s.origin);
     gi.linkentity(ent);
 
@@ -224,7 +236,7 @@ retry:
         }
     }
 
-    if (ent->inuse)
+    if (ent->inuse && (trace.fraction < 1.0f || remaining == 1))
         G_TouchTriggers(ent);
 
     return trace;
@@ -526,7 +538,6 @@ Toss, bounce, and fly movement.  When onground, do nothing.
 static void SV_Physics_Toss(edict_t *ent)
 {
     trace_t     trace;
-    vec3_t      move;
     float       backoff;
     edict_t     *slave;
     bool        wasinwater;
@@ -556,19 +567,28 @@ static void SV_Physics_Toss(edict_t *ent)
 
     VectorCopy(ent->s.origin, old_origin);
 
-    SV_CheckVelocity(ent);
-
-// add gravity
-    if (ent->movetype != MOVETYPE_FLY
-        && ent->movetype != MOVETYPE_FLYMISSILE)
-        SV_AddGravity(ent);
-
-// move angles
+// move angles even while waiting after a bounce
     VectorMA(ent->s.angles, FRAMETIME, ent->avelocity, ent->s.angles);
 
+    bool toss = ent->movetype == MOVETYPE_TOSS || ent->movetype == MOVETYPE_BOUNCE;
+    int step_frames = toss ? FRAMEDIV : 1;
+    int remaining = step_frames;
+    if (toss) {
+        remaining -= ent->toss_phase;
+        ent->toss_phase = remaining == 1 ? 0 : ent->toss_phase + 1;
+        if (ent->toss_hold) {
+            ent->toss_hold = ent->toss_phase != 0;
+            return;
+        }
+    }
+
+    if (remaining == step_frames)
+        SV_CheckVelocity(ent);
+    if (toss && remaining == step_frames)
+        ent->velocity[2] -= ent->gravity * sv_gravity->value * TOSS_STEP_TIME;
+
 // move origin
-    VectorScale(ent->velocity, FRAMETIME, move);
-    trace = SV_PushEntity(ent, move);
+    trace = SV_PushEntity(ent, remaining, step_frames);
     if (!ent->inuse)
         return;
 
@@ -579,6 +599,8 @@ static void SV_Physics_Toss(edict_t *ent)
             backoff = 1;
 
         ClipVelocity(ent->velocity, trace.plane.normal, ent->velocity, backoff);
+        if (remaining > 1)
+            ent->toss_hold = true;
 
         // stop if on ground
         if (trace.plane.normal[2] > 0.7f) {
@@ -587,6 +609,8 @@ static void SV_Physics_Toss(edict_t *ent)
                 ent->groundentity_linkcount = trace.ent->linkcount;
                 VectorCopy(vec3_origin, ent->velocity);
                 VectorCopy(vec3_origin, ent->avelocity);
+                ent->toss_phase = 0;
+                ent->toss_hold = false;
             }
         }
 

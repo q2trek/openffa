@@ -241,6 +241,8 @@ void ThrowClientHead(edict_t *self, int damage)
     self->flags |= FL_NO_KNOCKBACK;
 
     self->movetype = MOVETYPE_BOUNCE;
+    self->toss_phase = 0;
+    self->toss_hold = false;
     VelocityForDamage(damage, vd);
     VectorAdd(self->velocity, vd, self->velocity);
 
