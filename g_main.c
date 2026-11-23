@@ -1116,7 +1116,7 @@ void G_RunFrame(void)
                     ent->groundentity_linkcount = ent->groundentity->linkcount;
                 else
                     ent->groundentity = NULL;
-            } else {
+            } else if (FRAMESYNC) {
                 ent->groundentity = NULL;
             }
         }
