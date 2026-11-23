@@ -44,7 +44,9 @@ endif
 CFLAGS += -DOPENFFA_VERSION='"$(VER)"' -DOPENFFA_REVISION=$(REV)
 RCFLAGS += -DOPENFFA_VERSION='\"$(VER)\"' -DOPENFFA_REVISION=$(REV)
 
-OBJS := g_bans.o g_chase.o g_cmds.o g_combat.o g_func.o g_items.o g_main.o \
+CFLAGS += -DUSE_UNLAG
+
+OBJS := g_unlag.o g_bans.o g_chase.o g_cmds.o g_combat.o g_func.o g_items.o g_main.o \
 g_misc.o g_phys.o g_spawn.o g_svcmds.o g_target.o g_trigger.o g_utils.o \
 g_vote.o g_weapon.o p_client.o p_hud.o p_menu.o p_view.o p_weapon.o q_shared.o
 

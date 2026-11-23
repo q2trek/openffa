@@ -1247,6 +1247,7 @@ static void teleporter_touch(edict_t *self, edict_t *other, cplane_t *plane, csu
     // unlink to make sure it can't possibly interfere with G_KillBox
     //gi.unlinkentity(other);
 
+    G_UnlagNewLife(other);
     VectorCopy(dest->s.origin, other->s.origin);
     VectorCopy(dest->s.origin, other->s.old_origin);
     VectorCopy(dest->s.origin, other->old_origin);

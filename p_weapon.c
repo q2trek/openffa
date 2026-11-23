@@ -863,9 +863,11 @@ static void weapon_machinegun_fire(edict_t *ent)
     AngleVectors(angles, forward, right, NULL);
     VectorSet(offset, 0, 8, ent->viewheight - 8);
     P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
+    unlag_shot_t shot = G_UnlagBeginShot(ent);
     G_BeginDamage();
-    fire_bullet(ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
+    fire_bullet(ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN, &shot);
     G_EndDamage();
+    G_UnlagEndShot(ent, &shot);
 
     gi.WriteByte(svc_muzzleflash);
     gi.WriteShort(ent - g_edicts);
@@ -968,6 +970,7 @@ static void weapon_chaingun_fire(edict_t *ent)
         ent->client->kick_angles[i] = crandom() * 0.7f;
     }
 
+    unlag_shot_t shot = G_UnlagBeginShot(ent);
     G_BeginDamage();
     for (i = 0; i < shots; i++) {
         // get start / end positions
@@ -977,9 +980,10 @@ static void weapon_chaingun_fire(edict_t *ent)
         VectorSet(offset, 0, r, u + ent->viewheight - 8);
         P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
 
-        fire_bullet(ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_CHAINGUN);
+        fire_bullet(ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_CHAINGUN, &shot);
     }
     G_EndDamage();
+    G_UnlagEndShot(ent, &shot);
 
     // send muzzle flash
     gi.WriteByte(svc_muzzleflash);
@@ -1041,9 +1045,11 @@ static void weapon_shotgun_fire(edict_t *ent)
         kick *= 4;
     }
 
+    unlag_shot_t shot = G_UnlagBeginShot(ent);
     G_BeginDamage();
-    fire_shotgun(ent, start, forward, damage, kick, 500, 500, DEFAULT_DEATHMATCH_SHOTGUN_COUNT, MOD_SHOTGUN);
+    fire_shotgun(ent, start, forward, damage, kick, 500, 500, DEFAULT_DEATHMATCH_SHOTGUN_COUNT, MOD_SHOTGUN, &shot);
     G_EndDamage();
+    G_UnlagEndShot(ent, &shot);
 
     // send muzzle flash
     gi.WriteByte(svc_muzzleflash);
@@ -1094,16 +1100,18 @@ static void weapon_supershotgun_fire(edict_t *ent)
         kick *= 4;
     }
 
+    unlag_shot_t shot = G_UnlagBeginShot(ent);
     G_BeginDamage();
     v[PITCH] = ent->client->v_angle[PITCH];
     v[YAW]   = ent->client->v_angle[YAW] - 5;
     v[ROLL]  = ent->client->v_angle[ROLL];
     AngleVectors(v, forward, NULL, NULL);
-    fire_shotgun(ent, start, forward, damage, kick, DEFAULT_SHOTGUN_HSPREAD, DEFAULT_SHOTGUN_VSPREAD, DEFAULT_SSHOTGUN_COUNT / 2, MOD_SSHOTGUN);
+    fire_shotgun(ent, start, forward, damage, kick, DEFAULT_SHOTGUN_HSPREAD, DEFAULT_SHOTGUN_VSPREAD, DEFAULT_SSHOTGUN_COUNT / 2, MOD_SSHOTGUN, &shot);
     v[YAW]   = ent->client->v_angle[YAW] + 5;
     AngleVectors(v, forward, NULL, NULL);
-    fire_shotgun(ent, start, forward, damage, kick, DEFAULT_SHOTGUN_HSPREAD, DEFAULT_SHOTGUN_VSPREAD, DEFAULT_SSHOTGUN_COUNT / 2, MOD_SSHOTGUN);
+    fire_shotgun(ent, start, forward, damage, kick, DEFAULT_SHOTGUN_HSPREAD, DEFAULT_SHOTGUN_VSPREAD, DEFAULT_SSHOTGUN_COUNT / 2, MOD_SSHOTGUN, &shot);
     G_EndDamage();
+    G_UnlagEndShot(ent, &shot);
 
     // send muzzle flash
     gi.WriteByte(svc_muzzleflash);
@@ -1161,7 +1169,9 @@ static void weapon_railgun_fire(edict_t *ent)
 
     VectorSet(offset, 0, 7,  ent->viewheight - 8);
     P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
-    fire_rail(ent, start, forward, damage, kick);
+    unlag_shot_t shot = G_UnlagBeginShot(ent);
+    fire_rail(ent, start, forward, damage, kick, &shot);
+    G_UnlagEndShot(ent, &shot);
 
     // send muzzle flash
     gi.WriteByte(svc_muzzleflash);

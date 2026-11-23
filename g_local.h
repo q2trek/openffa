@@ -31,6 +31,20 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define GAME_INCLUDE
 #include "g_public.h"
 
+#ifdef USE_UNLAG
+#define UNLAG_MAX_FPS (MAX_FRAMEDIV * BASE_FRAMERATE)
+#define UNLAG_ACTIVE_PLAYER(ent) ((ent)->client->pers.connected == CONN_SPAWNED)
+/* The engine's config may enable protocol extensions, but OpenFFA uses API 3 edicts. */
+#pragma push_macro("USE_PROTOCOL_EXTENSIONS")
+#undef USE_PROTOCOL_EXTENSIONS
+#define USE_PROTOCOL_EXTENSIONS 0
+#include "gameext.h"
+#pragma pop_macro("USE_PROTOCOL_EXTENSIONS")
+#include "unlag.h"
+extern const game_import_ex_t *unlag_game_ex;
+extern const unlag_api_v1_t *unlag_api;
+#endif
+
 #if USE_FPS
 #define G_GMF_VARIABLE_FPS GMF_VARIABLE_FPS
 #else
@@ -605,6 +619,8 @@ extern  game_import_t   gi;
 extern  game_export_t   globals;
 extern  spawn_temp_t    st;
 
+#include "g_unlag.h"
+
 // means of death
 #define MOD_UNKNOWN         0
 #define MOD_BLASTER         1
@@ -858,13 +874,13 @@ void BecomeExplosion1(edict_t *self);
 // g_weapon.c
 //
 bool fire_hit(edict_t *self, vec3_t aim, int damage, int kick);
-void fire_bullet(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int mod);
-void fire_shotgun(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int count, int mod);
+void fire_bullet(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int mod, unlag_shot_t *shot);
+void fire_shotgun(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int count, int mod, unlag_shot_t *shot);
 void fire_blaster(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, int effect, bool hyper);
 void fire_grenade(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, int timer, float damage_radius);
 void fire_grenade2(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, int timer, float damage_radius, bool held);
 void fire_rocket(edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, float damage_radius, int radius_damage);
-void fire_rail(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick);
+void fire_rail(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick, unlag_shot_t *shot);
 void fire_bfg(edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, float damage_radius);
 
 //

@@ -545,6 +545,7 @@ void G_SpawnEntities(const char *mapname, const char *entities, const char *spaw
 
     G_LogClients();
 
+    G_UnlagClear();
     gi.FreeTags(TAG_LEVEL);
 
     G_ReportCrushOverflow();
@@ -687,6 +688,7 @@ void G_ResetLevel(void)
             ent->s.event = EV_OTHER_TELEPORT;
         }
     }
+    G_UnlagClear();
 }
 
 

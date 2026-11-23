@@ -577,6 +577,9 @@ void player_die(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage
 {
     int     n;
 
+    if (!self->deadflag)
+        G_UnlagNewLife(self);
+
     VectorClear(self->avelocity);
 
     self->takedamage = DAMAGE_YES;
@@ -1161,6 +1164,7 @@ void PutClientInServer(edict_t *ent)
     trace_t tr;
 
     index = ent - g_edicts - 1;
+    G_UnlagNewLife(ent);
     client = ent->client;
 
     // find a spawn point
@@ -1581,6 +1585,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo)
     }
 
     // they can connect
+    G_UnlagNewLife(ent);
     ent->client = game.clients + (ent - g_edicts - 1);
 
     memset(ent->client, 0, sizeof(gclient_t));
@@ -1627,6 +1632,7 @@ void ClientDisconnect(edict_t *ent)
     if (!ent->client)
         return;
 
+    G_UnlagNewLife(ent);
     connected = ent->client->pers.connected;
     ent->client->pers.connected = CONN_DISCONNECTED;
     ent->client->ps.stats[STAT_FRAGS] = 0;
@@ -1746,6 +1752,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd)
 
     level.current_entity = ent;
     client = ent->client;
+    G_UnlagCommand(ent);
 
     client->level.cmd.angles[0] = SHORT2ANGLE(ucmd->angles[0]);
     client->level.cmd.angles[1] = SHORT2ANGLE(ucmd->angles[1]);

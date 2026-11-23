@@ -19,6 +19,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include "g_local.h"
+#include <stddef.h>
 #include <errno.h>
 
 game_locals_t   game;
@@ -1186,6 +1187,7 @@ void G_RunFrame(void)
 
     // build the playerstate_t structures for all players
     ClientEndServerFrames();
+    G_UnlagRecord();
 
     // reset settings if no one was active for the last 5 minutes
     if (game.settings_modified && level.framenum - level.activity_framenum > 5 * 60 * HZ) {
@@ -1213,6 +1215,7 @@ static void G_Shutdown(void)
 
     G_CloseDatabase();
 
+    G_UnlagShutdown();
     gi.FreeTags(TAG_LEVEL);
     gi.FreeTags(TAG_GAME);
 
@@ -1383,6 +1386,7 @@ static void G_Init(void)
     game.maxclients = maxclients->value;
     game.clients = G_Malloc(game.maxclients * sizeof(game.clients[0]));
     globals.num_edicts = game.maxclients + 1;
+    G_UnlagInit();
 
     // obtain game path
     cv = gi.cvar("fs_gamedir", NULL, 0);
@@ -1447,6 +1451,9 @@ static void G_Init(void)
     }
 #endif
 
+#ifdef USE_UNLAG
+    gi.dprintf("OpenFFA: " UNLAG_API_V1 " %s\n", unlag_api ? "available" : "unavailable");
+#endif
     // export our own features
     gi.cvar_forceset("g_features", va("%d", G_FEATURES));
 }
@@ -1509,6 +1516,10 @@ and global variables
 q_exported game_export_t *GetGameAPI(game_import_t *import)
 {
     gi = *import;
+#ifdef USE_UNLAG
+    unlag_game_ex = NULL;
+    unlag_api = NULL;
+#endif
 
     globals.apiversion = GAME_API_VERSION;
     globals.Init = G_Init;
@@ -1535,3 +1546,22 @@ q_exported game_export_t *GetGameAPI(game_import_t *import)
 
     return &globals;
 }
+
+#ifdef USE_UNLAG
+const game_import_ex_t *unlag_game_ex;
+const unlag_api_v1_t *unlag_api;
+
+q_exported const game_export_ex_t *GetGameAPIEx(const game_import_ex_t *import);
+q_exported const game_export_ex_t *GetGameAPIEx(const game_import_ex_t *import)
+{
+    static const game_export_ex_t exports = {
+        .apiversion = GAME_API_VERSION_EX,
+        .structsize = sizeof(exports),
+    };
+    if (import && import->structsize >= offsetof(game_import_ex_t, TagRealloc) && import->GetExtension) {
+        unlag_game_ex = import;
+        unlag_api = import->GetExtension(UNLAG_API_V1);
+    }
+    return &exports;
+}
+#endif
