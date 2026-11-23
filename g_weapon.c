@@ -522,6 +522,10 @@ void fire_rail(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick,
     int         mask;
     bool        water;
     float       lastfrac;
+#ifdef USE_UNLAG
+    unlag_rail_t rail;
+    rail.count = 0;
+#endif
 
     VectorMA(start, 8192, aimdir, end);
     VectorCopy(start, from);
@@ -530,7 +534,7 @@ void fire_rail(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick,
     mask = MASK_SHOT | CONTENTS_SLIME | CONTENTS_LAVA;
     lastfrac = 1;
     while (ignore) {
-        tr = G_UnlagTrace(shot, self, from, end, ignore, mask, damage_point);
+        tr = G_UnlagRailTrace(shot, &rail, self, from, end, ignore, mask, damage_point);
 
         if (tr.contents & (CONTENTS_SLIME | CONTENTS_LAVA)) {
             mask &= ~(CONTENTS_SLIME | CONTENTS_LAVA);
@@ -538,7 +542,7 @@ void fire_rail(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick,
         } else {
             //ZOID--added so rail goes through SOLID_BBOX entities (gibs, etc)
             if (((tr.ent->svflags & SVF_MONSTER) || (tr.ent->client) ||
-                (tr.ent->solid == SOLID_BBOX)) && (lastfrac + tr.fraction > 0))
+                (tr.ent->solid == SOLID_BBOX)) && (shot->rewind || lastfrac + tr.fraction > 0))
                 ignore = tr.ent;
             else
                 ignore = NULL;
