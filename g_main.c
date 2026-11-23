@@ -1209,6 +1209,7 @@ void G_RunFrame(void)
 static void G_Shutdown(void)
 {
     gi.dprintf("==== ShutdownGame ====\n");
+    G_ReportCrushOverflow();
 
     G_CloseDatabase();
 

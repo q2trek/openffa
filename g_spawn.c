@@ -547,6 +547,7 @@ void G_SpawnEntities(const char *mapname, const char *entities, const char *spaw
 
     gi.FreeTags(TAG_LEVEL);
 
+    G_ReportCrushOverflow();
     memset(&level, 0, sizeof(level));
     memset(g_edicts, 0, game.maxentities * sizeof(g_edicts[0]));
 

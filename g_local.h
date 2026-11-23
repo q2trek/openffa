@@ -520,6 +520,7 @@ typedef struct {
         edict_t *self, *other;
         int     framenum;
     } crush[MAX_CRUSH];
+    unsigned long long crush_overflows;
 } level_locals_t;
 
 
@@ -805,6 +806,7 @@ void    G_InitEdict(edict_t *e);
 edict_t *G_Spawn(void);
 void    G_FreeEdict(edict_t *e);
 bool    G_CrushAllowed(edict_t *self, edict_t *other);
+void    G_ReportCrushOverflow(void);
 
 void    G_TouchTriggers(edict_t *ent);
 //void  G_TouchSolids (edict_t *ent);
