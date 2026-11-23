@@ -331,6 +331,20 @@ void G_InitEdict(edict_t *e)
     e->s.number = e - g_edicts;
 }
 
+static bool G_CanReuseEdict(const edict_t *ent)
+{
+    // Relax replacement during the first two seconds of the map.
+    if (ent->freed_framenum < 2 * HZ)
+        return true;
+
+    if (FRAMEDIV > 1)
+        return level.framenum - ent->freed_framenum > HZ / 2;
+
+    // Preserve the original float boundary at 10 Hz.
+    float freed_time = ent->freed_framenum * FRAMETIME;
+    return level.time - freed_time > 0.5f;
+}
+
 /*
 =================
 G_Spawn
@@ -349,9 +363,7 @@ edict_t *G_Spawn(void)
 
     e = &g_edicts[game.maxclients + 1];
     for (i = game.maxclients + 1; i < globals.num_edicts; i++, e++) {
-        // the first couple seconds of server time can involve a lot of
-        // freeing and allocating, so relax the replacement policy
-        if (!e->inuse && (e->freetime < 2 || level.time - e->freetime > 0.5f)) {
+        if (!e->inuse && G_CanReuseEdict(e)) {
             G_InitEdict(e);
             return e;
         }
@@ -388,7 +400,7 @@ void G_FreeEdict(edict_t *ed)
 
     memset(ed, 0, sizeof(*ed));
     ed->classname = "freed";
-    ed->freetime = level.time;
+    ed->freed_framenum = level.framenum;
     ed->inuse = false;
 }
 

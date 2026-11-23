@@ -1291,7 +1291,7 @@ struct edict_s {
     int         flags;
 
     char        *model;
-    float       freetime;           // sv.time when the object was freed
+    int         freed_framenum;     // level.framenum when the object was freed
 
     //
     // only used locally in game, not by server
