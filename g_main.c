@@ -1117,7 +1117,8 @@ void G_RunFrame(void)
                     ent->groundentity_linkcount = ent->groundentity->linkcount;
                 else
                     ent->groundentity = NULL;
-            } else if (FRAMESYNC || ent->groundentity->client) {
+            } else if (FRAMESYNC || ent->groundentity->client ||
+                       ent->groundentity->solid == SOLID_NOT) {
                 ent->groundentity = NULL;
             }
         }
