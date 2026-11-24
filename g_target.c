@@ -121,6 +121,9 @@ Spawns an explosion temporary entity when used.
 */
 static void target_explosion_explode(edict_t *self)
 {
+    if (self->delay && G_DeferToWindow(self))
+        return;
+
     float       save;
 
     gi.WriteByte(svc_temp_entity);

@@ -1756,6 +1756,15 @@ static void func_timer_think(edict_t *self)
     func_timer_fire(self, G_GridFrames(0.1f));
 }
 
+static void func_timer_short_think(edict_t *self)
+{
+    if (G_DeferToWindow(self))
+        return;
+
+    self->think = func_timer_think;
+    func_timer_think(self);
+}
+
 static void func_timer_use(edict_t *self, edict_t *other, edict_t *activator)
 {
     self->activator = activator;
@@ -1771,6 +1780,8 @@ static void func_timer_use(edict_t *self, edict_t *other, edict_t *activator)
         self->nextthink = G_WindowFrame(level.framenum) + G_GridFrames(self->delay);
     else
         func_timer_fire(self, 0);
+    self->think = self->nextthink == G_WindowFrame(level.framenum)
+        ? func_timer_short_think : func_timer_think;
 }
 
 void SP_func_timer(edict_t *self)

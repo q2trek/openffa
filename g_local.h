@@ -820,6 +820,7 @@ edict_t *findradius(edict_t *from, vec3_t org, float rad);
 edict_t *G_PickTarget(char *targetname);
 int     G_WindowFrame(int framenum);
 int     G_GridFrames(float seconds);
+bool G_DeferToWindow(edict_t *ent);
 void    G_UseTargets(edict_t *ent, edict_t *activator);
 void    G_SetMovedir(vec3_t angles, vec3_t movedir);
 
