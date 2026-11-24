@@ -920,7 +920,7 @@ void G_CheckMatchStart(void)
             G_FinishVote();
             gi.bprintf (PRINT_HIGH, "All players ready! Countdown starts...\n");
             level.match_state = MS_COUNTDOWN;
-            level.countdown_framenum = level.framenum;
+            level.countdown_framenum = G_WindowFrame(level.framenum);
         }
     } else {
         if (level.match_state == MS_COUNTDOWN) {
@@ -960,7 +960,7 @@ static void CheckDMRules(void)
         goto done;
 
     if (timelimit->value > 0) {
-        if (level.time >= timelimit->value * 60) {
+        if (FRAMESYNC && level.time >= timelimit->value * 60) {
             gi.bprintf(PRINT_HIGH, "Timelimit hit.\n");
             G_SetTimeVar(0);
             EndDMLevel();

@@ -599,7 +599,7 @@ void player_die(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage
     self->svflags |= SVF_DEADMONSTER;
 
     if (!self->deadflag) {
-        self->client->respawn_framenum = level.framenum + 1 * HZ;
+        self->client->respawn_framenum = G_WindowFrame(level.framenum) + HZ;
         LookAtKiller(self, inflictor, attacker);
         self->client->ps.pmove.pm_type = PM_DEAD;
         ClientObituary(self, inflictor, attacker);
@@ -1983,7 +1983,7 @@ void ClientBeginServerFrame(edict_t *ent)
             }
         }
 
-        if (ent->deadflag) {
+        if (FRAMESYNC && ent->deadflag) {
             // wait for any button just going down
             if (level.framenum > client->respawn_framenum) {
                 // in deathmatch, only wait for attack button
@@ -1997,5 +1997,6 @@ void ClientBeginServerFrame(edict_t *ent)
         }
     }
 
-    client->latched_buttons = 0;
+    if (FRAMESYNC)
+        client->latched_buttons = 0;
 }

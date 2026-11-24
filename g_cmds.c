@@ -562,7 +562,7 @@ static void Cmd_Kill_f(edict_t *ent)
 {
     if (!PlayerSpawned(ent))
         return;
-    if (level.framenum - ent->client->respawn_framenum < 5 * HZ)
+    if (G_WindowFrame(level.framenum) - ent->client->respawn_framenum < 5 * HZ)
         return;
     ent->flags &= ~FL_GODMODE;
     ent->health = 0;
