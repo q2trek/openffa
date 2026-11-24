@@ -34,12 +34,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifdef USE_UNLAG
 #define UNLAG_MAX_FPS (MAX_FRAMEDIV * BASE_FRAMERATE)
 #define UNLAG_ACTIVE_PLAYER(ent) ((ent)->client->pers.connected == CONN_SPAWNED)
+#endif
 /* The engine's config may enable protocol extensions, but OpenFFA uses API 3 edicts. */
 #pragma push_macro("USE_PROTOCOL_EXTENSIONS")
 #undef USE_PROTOCOL_EXTENSIONS
 #define USE_PROTOCOL_EXTENSIONS 0
 #include "gameext.h"
 #pragma pop_macro("USE_PROTOCOL_EXTENSIONS")
+#ifdef USE_UNLAG
 #include "unlag.h"
 extern const game_import_ex_t *unlag_game_ex;
 extern const unlag_api_v1_t *unlag_api;
