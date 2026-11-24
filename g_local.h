@@ -934,7 +934,9 @@ void HighScoresMessage(void);
 //
 // g_phys.c
 //
+void G_GridProjectile(edict_t *ent);
 void G_RunEntity(edict_t *ent);
+void SV_TossAirborne(edict_t *ent);
 
 //
 // g_main.c
@@ -1366,6 +1368,11 @@ struct edict_s {
     edict_t     *activator;
     edict_t     *groundentity;
     int         groundentity_linkcount;
+    bool        grid_move;
+    int         grid_frame;         // world frame of the last grid step
+    vec3_t      grid_from;
+    vec3_t      grid_from_angles;
+    int         toss_ground_frame;  // stationary toss turn, stored as framenum + 1
     int         toss_phase;         // world frames already advanced in the classic toss step
     bool        toss_hold;          // wait in place after a bounce until the classic step ends
     vec3_t      toss_end;
