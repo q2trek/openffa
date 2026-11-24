@@ -588,6 +588,9 @@ static void P_WorldEffects(void)
         return;
     }
 
+    if (!FRAMESYNC)
+        return;
+
     waterlevel = current_player->waterlevel;
     old_waterlevel = current_client->old_waterlevel;
     current_client->old_waterlevel = waterlevel;
@@ -657,8 +660,8 @@ static void P_WorldEffects(void)
             // drown!
             if (current_player->client->next_drown_framenum < level.framenum
                 && current_player->health > 0) {
-                // Preserve the 1.1 s gap imposed by the exclusive 10 Hz deadline.
-                current_player->client->next_drown_framenum = level.framenum + 1 * HZ + FRAMEDIV - 1;
+                // The strict cutoff permits the next hit on the following 100 ms step.
+                current_player->client->next_drown_framenum = level.framenum + 1 * HZ;
 
                 // take more damage the longer underwater
                 current_player->dmg += 2;
@@ -696,16 +699,14 @@ static void P_WorldEffects(void)
                 current_player->pain_debounce_framenum = level.framenum + 1 * HZ;
             }
 
-            if (FRAMESYNC) {
-                if (envirosuit) // take 1/3 damage with envirosuit
-                    T_Damage(current_player, world, world, vec3_origin, current_player->s.origin, vec3_origin, 1 * waterlevel, 0, 0, MOD_LAVA);
-                else
-                    T_Damage(current_player, world, world, vec3_origin, current_player->s.origin, vec3_origin, 3 * waterlevel, 0, 0, MOD_LAVA);
-            }
+            if (envirosuit) // take 1/3 damage with envirosuit
+                T_Damage(current_player, world, world, vec3_origin, current_player->s.origin, vec3_origin, 1 * waterlevel, 0, 0, MOD_LAVA);
+            else
+                T_Damage(current_player, world, world, vec3_origin, current_player->s.origin, vec3_origin, 3 * waterlevel, 0, 0, MOD_LAVA);
         }
 
         if (current_player->watertype & CONTENTS_SLIME) {
-            if (!envirosuit && FRAMESYNC) {
+            if (!envirosuit) {
                 // no damage from slime with envirosuit
                 T_Damage(current_player, world, world, vec3_origin, current_player->s.origin, vec3_origin, 1 * waterlevel, 0, 0, MOD_SLIME);
             }

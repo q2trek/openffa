@@ -51,7 +51,7 @@ static void multi_trigger(edict_t *ent)
 
     if (ent->wait > 0) {
         ent->think = multi_wait;
-        ent->nextthink = level.framenum + ent->wait * HZ;
+        ent->nextthink = G_WindowFrame(level.framenum) + G_GridFrames(ent->wait);
     } else {
         // we can't just remove (self) here, because this is a touch function
         // called while looping through area links...
@@ -339,8 +339,9 @@ static void trigger_push_touch(edict_t *self, edict_t *other, cplane_t *plane, c
         if (other->client) {
             // don't take falling damage immediately from this
             VectorCopy(other->velocity, other->client->oldvelocity);
-            if (other->fly_sound_debounce_framenum < level.framenum) {
-                other->fly_sound_debounce_framenum = level.framenum + 1.5f * HZ;
+            int window = G_WindowFrame(level.framenum);
+            if (other->fly_sound_debounce_framenum < window) {
+                other->fly_sound_debounce_framenum = window + 1.5f * HZ;
                 gi.sound(other, CHAN_AUTO, level.sounds.windfly, 1, ATTN_NORM, 0);
             }
         }
@@ -405,19 +406,17 @@ static void hurt_touch(edict_t *self, edict_t *other, cplane_t *plane, csurface_
     if (!other->takedamage)
         return;
 
-    if (self->timestamp > level.framenum)
+    int window = G_WindowFrame(level.framenum);
+    if (self->timestamp > window)
         return;
 
     if (self->spawnflags & 16)
-        self->timestamp = level.framenum + 1 * HZ;
+        self->timestamp = window + 1 * HZ;
     else
-        self->timestamp = level.framenum + 0.1f * HZ;
+        self->timestamp = window + FRAMEDIV;
 
-    // the sound has its own 1 s cooldown, whatever the contact phase
-    if (!(self->spawnflags & 4) && self->fly_sound_debounce_framenum <= level.framenum) {
-        self->fly_sound_debounce_framenum = level.framenum + 1 * HZ;
+    if (!(self->spawnflags & 4) && window % HZ == G_WindowFrame(HZ) - HZ)
         gi.sound(other, CHAN_AUTO, self->noise_index, 1, ATTN_NORM, 0);
-    }
 
     if (self->spawnflags & 8)
         dflags = DAMAGE_NO_PROTECTION;

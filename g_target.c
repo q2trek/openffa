@@ -146,7 +146,7 @@ static void use_target_explosion(edict_t *self, edict_t *other, edict_t *activat
     }
 
     self->think = target_explosion_explode;
-    self->nextthink = level.framenum + self->delay * HZ;
+    self->nextthink = G_WindowFrame(level.framenum) + G_GridFrames(self->delay);
 }
 
 void SP_target_explosion(edict_t *ent)
