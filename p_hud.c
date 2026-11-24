@@ -654,7 +654,7 @@ void G_SetStats(edict_t *ent)
     //
     // pickup message
     //
-    if (level.framenum > ent->client->pickup_framenum) {
+    if (FRAMESYNC && level.framenum > ent->client->pickup_framenum) {
         ent->client->ps.stats[STAT_PICKUP_ICON] = 0;
         ent->client->ps.stats[STAT_PICKUP_STRING] = 0;
     }

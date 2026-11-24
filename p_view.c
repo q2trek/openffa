@@ -402,6 +402,38 @@ static void P_AddBlend(float r, float g, float b, float a, float *v_blend)
 }
 
 
+static void CalcPowerupBlend(edict_t *ent)
+{
+    gclient_t *client = ent->client;
+    float *blend = client->powerup_blend;
+    int remaining;
+    const char *sound;
+    float alpha = 0.08f;
+
+    if (client->quad_framenum > level.framenum) {
+        remaining = client->quad_framenum - level.framenum;
+        sound = "items/damage2.wav";
+        VectorSet(blend, 0, 0, 1);
+    } else if (client->invincible_framenum > level.framenum) {
+        remaining = client->invincible_framenum - level.framenum;
+        sound = "items/protect2.wav";
+        VectorSet(blend, 1, 1, 0);
+    } else if (client->enviro_framenum > level.framenum) {
+        remaining = client->enviro_framenum - level.framenum;
+        sound = "items/airout.wav";
+        VectorSet(blend, 0, 1, 0);
+    } else {
+        remaining = client->breather_framenum - level.framenum;
+        sound = "items/airout.wav";
+        VectorSet(blend, 0.4f, 1, 0.4f);
+        alpha = 0.04f;
+    }
+
+    if (remaining == 3 * HZ)
+        gi.sound(ent, CHAN_ITEM, gi.soundindex(sound), 1, ATTN_NORM, 0);
+    blend[3] = remaining > 3 * HZ || ((remaining / FRAMEDIV) & 4) ? alpha : 0;
+}
+
 /*
 =============
 P_CalcBlend
@@ -411,7 +443,11 @@ static void P_CalcBlend(edict_t *ent)
 {
     int     contents;
     vec3_t  vieworg;
-    int     remaining;
+    float *powerup_blend = ent->client->powerup_blend;
+    bool powerup_active = ent->client->quad_framenum > level.framenum ||
+                          ent->client->invincible_framenum > level.framenum ||
+                          ent->client->enviro_framenum > level.framenum ||
+                          ent->client->breather_framenum > level.framenum;
 
     Vector4Clear(ent->client->ps.blend);
 
@@ -430,32 +466,15 @@ static void P_CalcBlend(edict_t *ent)
     else if (contents & CONTENTS_WATER)
         P_AddBlend(0.5f, 0.3f, 0.2f, 0.4f, ent->client->ps.blend);
 
-    // add for powerups
-    if (ent->client->quad_framenum > level.framenum) {
-        remaining = ent->client->quad_framenum - level.framenum;
-        if (remaining == 3 * HZ)  // beginning to fade
-            gi.sound(ent, CHAN_ITEM, gi.soundindex("items/damage2.wav"), 1, ATTN_NORM, 0);
-        if (remaining > 3 * HZ || ((remaining / FRAMEDIV) & 4))
-            P_AddBlend(0, 0, 1, 0.08f, ent->client->ps.blend);
-    } else if (ent->client->invincible_framenum > level.framenum) {
-        remaining = ent->client->invincible_framenum - level.framenum;
-        if (remaining == 3 * HZ)  // beginning to fade
-            gi.sound(ent, CHAN_ITEM, gi.soundindex("items/protect2.wav"), 1, ATTN_NORM, 0);
-        if (remaining > 3 * HZ || ((remaining / FRAMEDIV) & 4))
-            P_AddBlend(1, 1, 0, 0.08f, ent->client->ps.blend);
-    } else if (ent->client->enviro_framenum > level.framenum) {
-        remaining = ent->client->enviro_framenum - level.framenum;
-        if (remaining == 3 * HZ)  // beginning to fade
-            gi.sound(ent, CHAN_ITEM, gi.soundindex("items/airout.wav"), 1, ATTN_NORM, 0);
-        if (remaining > 3 * HZ || ((remaining / FRAMEDIV) & 4))
-            P_AddBlend(0, 1, 0, 0.08f, ent->client->ps.blend);
-    } else if (ent->client->breather_framenum > level.framenum) {
-        remaining = ent->client->breather_framenum - level.framenum;
-        if (remaining == 3 * HZ)  // beginning to fade
-            gi.sound(ent, CHAN_ITEM, gi.soundindex("items/airout.wav"), 1, ATTN_NORM, 0);
-        if (remaining > 3 * HZ || ((remaining / FRAMEDIV) & 4))
-            P_AddBlend(0.4f, 1, 0.4f, 0.04f, ent->client->ps.blend);
-    }
+    // Reuse the grid tint while still composing water, damage and bonus every frame.
+    if (ent->health <= 0 || !powerup_active)
+        powerup_blend[3] = 0;
+    else if (FRAMESYNC)
+        CalcPowerupBlend(ent);
+
+    if (powerup_blend[3] > 0)
+        P_AddBlend(powerup_blend[0], powerup_blend[1], powerup_blend[2],
+                  powerup_blend[3], ent->client->ps.blend);
 
     // add for damage
     if (ent->client->damage_alpha > 0)
@@ -705,11 +724,17 @@ static void P_SetEffects(edict_t *ent)
     int     pa_type;
     int     remaining;
 
+    if (ent->health <= 0 || level.intermission_framenum) {
+        ent->s.effects = 0;
+        ent->s.renderfx = 0;
+        return;
+    }
+
+    if (!FRAMESYNC)
+        return;
+
     ent->s.effects = 0;
     ent->s.renderfx = 0;
-
-    if (ent->health <= 0 || level.intermission_framenum)
-        return;
 
     if (ent->client->powerarmor_framenum > level.framenum) {
         pa_type = PowerArmorIndex(ent);

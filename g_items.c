@@ -44,7 +44,7 @@ static const gitem_armor_t bodyarmor_info   = {100, 200, .80, .60, ARMOR_BODY};
 #define HEALTH_TIMED        2
 
 void Use_Quad(edict_t *ent, gitem_t *item);
-static int  quad_drop_timeout_hack;
+static void Use_QuadFor(edict_t *ent, gitem_t *item, int timeout);
 
 static bool ItemBanned(edict_t *ent);
 
@@ -187,7 +187,7 @@ void SetRespawn(edict_t *ent, float delay)
     ent->flags |= FL_RESPAWN;
     ent->svflags |= SVF_NOCLIENT;
     ent->solid = SOLID_NOT;
-    ent->nextthink = level.framenum + delay * HZ;
+    ent->nextthink = G_WindowFrame(level.framenum) + G_GridFrames(delay);
     ent->think = DoRespawn;
     gi.linkentity(ent);
 }
@@ -207,11 +207,10 @@ bool Pickup_Powerup(edict_t *ent, edict_t *other)
 
     if (!(ent->spawnflags & DROPPED_ITEM))
         SetRespawn(ent, ent->item->quantity);
-    if (DF(INSTANT_ITEMS) || ((ent->item->use == Use_Quad) && (ent->spawnflags & DROPPED_PLAYER_ITEM))) {
-        if ((ent->item->use == Use_Quad) && (ent->spawnflags & DROPPED_PLAYER_ITEM))
-            quad_drop_timeout_hack = ent->nextthink - level.framenum;
+    if (ent->item->use == Use_Quad && (ent->spawnflags & DROPPED_PLAYER_ITEM))
+        Use_QuadFor(other, ent->item, ent->nextthink - G_WindowFrame(level.framenum));
+    else if (DF(INSTANT_ITEMS))
         ent->item->use(other, ent->item);
-    }
 
     return true;
 }
@@ -335,22 +334,21 @@ bool Pickup_Pack(edict_t *ent, edict_t *other)
 
 void Use_Quad(edict_t *ent, gitem_t *item)
 {
-    int     timeout;
+    Use_QuadFor(ent, item, 30 * HZ);
+}
 
+static void Use_QuadFor(edict_t *ent, gitem_t *item, int timeout)
+{
     ent->client->inventory[ITEM_INDEX(item)]--;
     ValidateSelectedItem(ent);
 
-    if (quad_drop_timeout_hack) {
-        timeout = quad_drop_timeout_hack;
-        quad_drop_timeout_hack = 0;
-    } else {
-        timeout = 30 * HZ;
-    }
+    if (timeout <= 0)
+        return;
 
     if (ent->client->quad_framenum > level.framenum)
         ent->client->quad_framenum += timeout;
     else
-        ent->client->quad_framenum = level.framenum + timeout;
+        ent->client->quad_framenum = G_WindowFrame(level.framenum) + timeout;
 
     UpdateChaseTargets(CHASE_QUAD, ent);
 
@@ -367,7 +365,7 @@ void Use_Breather(edict_t *ent, gitem_t *item)
     if (ent->client->breather_framenum > level.framenum)
         ent->client->breather_framenum += 30 * HZ;
     else
-        ent->client->breather_framenum = level.framenum + 30 * HZ;
+        ent->client->breather_framenum = G_WindowFrame(level.framenum) + 30 * HZ;
 
 //  gi.sound(ent, CHAN_ITEM, gi.soundindex("items/damage.wav"), 1, ATTN_NORM, 0);
 }
@@ -382,7 +380,7 @@ void Use_Envirosuit(edict_t *ent, gitem_t *item)
     if (ent->client->enviro_framenum > level.framenum)
         ent->client->enviro_framenum += 30 * HZ;
     else
-        ent->client->enviro_framenum = level.framenum + 30 * HZ;
+        ent->client->enviro_framenum = G_WindowFrame(level.framenum) + 30 * HZ;
 
 //  gi.sound(ent, CHAN_ITEM, gi.soundindex("items/damage.wav"), 1, ATTN_NORM, 0);
 }
@@ -395,9 +393,9 @@ void Use_Invulnerability(edict_t *ent, gitem_t *item)
     ValidateSelectedItem(ent);
 
     if (ent->client->invincible_framenum > level.framenum)
-        ent->client->invincible_framenum += 30 * HZ;
+        ent->client->invincible_framenum = G_WindowFrame(ent->client->invincible_framenum) + 30 * HZ;
     else
-        ent->client->invincible_framenum = level.framenum + 30 * HZ;
+        ent->client->invincible_framenum = G_WindowFrame(level.framenum) + 30 * HZ;
 
     UpdateChaseTargets(CHASE_INVU, ent);
 
@@ -548,7 +546,7 @@ bool Pickup_Health(edict_t *ent, edict_t *other)
 
     if (ent->style & HEALTH_TIMED) {
         ent->think = MegaHealth_think;
-        ent->nextthink = level.framenum + 5 * HZ;
+        ent->nextthink = G_WindowFrame(level.framenum) + 5 * HZ;
         ent->owner = other;
         ent->flags |= FL_RESPAWN;
         ent->svflags |= SVF_NOCLIENT;
@@ -776,7 +774,7 @@ void Touch_Item(edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *surf)
         // show icon and name on status bar
         other->client->ps.stats[STAT_PICKUP_ICON] = gi.imageindex(ent->item->icon);
         other->client->ps.stats[STAT_PICKUP_STRING] = CS_ITEMS + ITEM_INDEX(ent->item);
-        other->client->pickup_framenum = level.framenum + 3 * HZ;
+        other->client->pickup_framenum = G_WindowFrame(level.framenum) + 3 * HZ;
 
         // change selected item
         if (ent->item->use)
@@ -872,7 +870,7 @@ edict_t *Drop_Item(edict_t *ent, gitem_t *item)
     dropped->velocity[2] = 300;
 
     dropped->think = drop_make_touchable;
-    dropped->nextthink = level.framenum + 1 * HZ;
+    dropped->nextthink = G_WindowFrame(level.framenum) + 1 * HZ;
 
     gi.linkentity(dropped);
 

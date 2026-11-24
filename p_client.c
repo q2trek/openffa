@@ -508,7 +508,7 @@ static void TossClientWeapon(edict_t *self)
     if (!DF(QUAD_DROP))
         quad = false;
     else
-        quad = (self->client->quad_framenum > (level.framenum + 1 * HZ));
+        quad = (self->client->quad_framenum > (G_WindowFrame(level.framenum) + 1 * HZ));
 
     if (item && quad)
         spread = 22.5f;

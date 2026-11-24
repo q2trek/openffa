@@ -1206,6 +1206,7 @@ struct gclient_s {
     float       v_dmg_roll, v_dmg_pitch, v_dmg_time;    // damage kicks
     float       fall_time, fall_value;      // for view drop on fall
     float       damage_alpha;
+    float       powerup_blend[4];
     float       bonus_alpha;
     vec3_t      damage_blend;
     vec3_t      v_angle;            // aiming direction

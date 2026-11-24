@@ -68,8 +68,11 @@ What the tick rate commits change:
 
 - Warmup countdowns, respawns, voted time limits and the post-spawn kill guard follow the server grid.
 
+- Item and powerup deadlines, HUD indicators and tint follow the grid.
+
 The same code also changes a few things at 10 Hz:
 
+- A dropped quad picked up at its expiry is consumed without adding quad time.
 - Moves that aren't whole multiples of 1/8 unit keep their exact average
   speed.
 - A player on a mover keeps it as ground in frames without a usercmd.
