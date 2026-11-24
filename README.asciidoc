@@ -64,6 +64,8 @@ What the tick rate commits change:
 
 - Weapon bolts, rockets, grenades and BFG balls move, touch and think in complete 100 ms steps. Dropped items and debris keep the classic toss arc and wait out the current step after a bounce. Moving supports carry loose objects. Weapon grenades recheck moving support on their grid step.
 
+- Above 10 Hz, a push that rounds to zero and does not rotate keeps grenades supported without another impact.
+
 - Weapon steps use the next 100 ms grid time. A fresh OpenFFA tap between world frames is buffered only when the weapon can use it.
 
 - Warmup countdowns, respawns, voted time limits and the post-spawn kill guard follow the server grid.
