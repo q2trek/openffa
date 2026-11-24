@@ -1748,7 +1748,6 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd)
     int     i, j;
     pmove_t pm;
     vec3_t start;
-    bool new_attack;
 
     level.current_entity = ent;
     client = ent->client;
@@ -1873,12 +1872,18 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd)
         }
     }
 
-    // this usercmd latches a fresh press (one not already carried in latched_buttons)
-    new_attack = !(client->latched_buttons & BUTTON_ATTACK);
-
     client->oldbuttons = client->buttons;
     client->buttons = ucmd->buttons;
-    client->latched_buttons |= client->buttons & ~client->oldbuttons;
+    int pressed = client->buttons & ~client->oldbuttons;
+    // A fresh tap can follow a step that made the weapon ready or kept cooking.
+    bool accepts_repress = client->weaponstate == WEAPON_READY ||
+        (client->grenade_framenum && client->grenade_state == GRENADE_NONE);
+    bool new_attack = (pressed & BUTTON_ATTACK) &&
+        (!(client->latched_buttons & BUTTON_ATTACK) ||
+         (accepts_repress && client->attack_latch_framenum != level.framenum));
+    if (pressed & BUTTON_ATTACK)
+        client->attack_latch_framenum = level.framenum;
+    client->latched_buttons |= pressed;
 
     // save light level the player is standing on for
     // monster sighting AI

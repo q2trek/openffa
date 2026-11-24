@@ -210,6 +210,13 @@ void Think_Weapon(edict_t *ent)
 {
     bool pending = ent->client->attack_pending;
     int buttons, latched;
+    int framenum = level.framenum;
+    float time = level.time;
+
+    // An early step from ClientThink uses the coming grid frame's clock.
+    level.framenum = G_WindowFrame(framenum);
+    if (level.framenum != framenum)
+        level.time = level.framenum * FRAMETIME;
 
     ent->client->attack_pending = false;
 
@@ -221,7 +228,7 @@ void Think_Weapon(edict_t *ent)
     }
 
     if (level.match_state == MS_COUNTDOWN)
-        return;
+        goto restore_clock;
 
     // call active weapon think routine
     if (ent->client->weapon && ent->client->weapon->weaponthink) {
@@ -244,6 +251,10 @@ void Think_Weapon(edict_t *ent)
         ent->client->buttons = buttons;
         ent->client->latched_buttons &= latched | ~BUTTON_ATTACK;
     }
+
+restore_clock:
+    level.framenum = framenum;
+    level.time = time;
 }
 
 
