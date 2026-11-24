@@ -618,6 +618,7 @@ void G_ResetLevel(void)
     edict_t *ent;
     edict_t *ents[MAX_CLIENTS];
     int i, count;
+    int phase = level.framenum - KEYFRAME(0);
 
     gi.FreeTags(TAG_LEVEL);
 
@@ -627,6 +628,7 @@ void G_ResetLevel(void)
 
     // clear level
     level.framenum = 0;
+    level.grid_frame_offset = 0;
     level.time = 0;
     level.intermission_framenum = 0;
     level.intermission_exit = 0;
@@ -648,8 +650,10 @@ void G_ResetLevel(void)
 
     InitBodyQue();
 
-    // respawn all edicts
+    // Give parsed grid deadlines the phase they will use after settling.
+    level.grid_frame_offset = phase;
     G_ParseString();
+    level.grid_frame_offset = 0;
     G_FindTeams();
     //G_UpdateItemBans();
 
@@ -671,9 +675,12 @@ void G_ResetLevel(void)
         }
     }
 
-    // allow everything to settle
+    // Keep the map's startup think order, then account for two settling windows.
     G_RunFrame();
     G_RunFrame();
+    level.framenum = 2 * FRAMEDIV;
+    level.time = level.framenum * FRAMETIME;
+    level.grid_frame_offset = phase;
 
     G_ShuffleArray(ents, count);
     for (i = 0; i < count; i++)

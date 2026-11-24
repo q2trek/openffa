@@ -21,6 +21,20 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
+// Between world frames, framenum already names the coming frame.
+int G_WindowFrame(int framenum)
+{
+    if (FRAMEDIV <= 1 || framenum < 0)
+        return framenum;
+    int offset = level.grid_frame_offset;
+    return ((framenum + offset + FRAMEDIV - 1) / FRAMEDIV) * FRAMEDIV - offset;
+}
+
+int G_GridFrames(float seconds)
+{
+    return FRAMEDIV * (int)(seconds * BASE_FRAMERATE);
+}
+
 
 void G_ProjectSource(vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result)
 {

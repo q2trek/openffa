@@ -120,7 +120,7 @@ extern const unlag_api_v1_t *unlag_api;
 #define HZ              game.framerate
 #define FRAMETIME       game.frametime
 #define FRAMEDIV        game.framediv
-#define FRAMESYNC       !(level.framenum % game.framediv)
+#define FRAMESYNC       !((level.framenum + level.grid_frame_offset) % game.framediv)
 #else
 #define HZ              BASE_FRAMERATE
 #define FRAMETIME       BASE_FRAMETIME_1000
@@ -128,7 +128,7 @@ extern const unlag_api_v1_t *unlag_api;
 #define FRAMESYNC       1
 #endif
 
-#define KEYFRAME(x)   (level.framenum + (x) - (level.framenum % FRAMEDIV))
+#define KEYFRAME(x)   (level.framenum + (x) - ((level.framenum + level.grid_frame_offset) % FRAMEDIV))
 
 #define NEXT_FRAME(ent, func) \
     ((ent)->think = (func), (ent)->nextthink = level.framenum + 1)
@@ -445,6 +445,7 @@ typedef enum {
 //
 typedef struct {
     int         framenum;
+    int         grid_frame_offset;     // server grid phase relative to the level clock
     float       time;
 
     char        mapname[MAX_QPATH];     // the server name (base1, etc)
@@ -815,6 +816,8 @@ void    G_ProjectSource(vec3_t point, vec3_t distance, vec3_t forward, vec3_t ri
 edict_t *G_Find(edict_t *from, size_t fieldofs, char *match);
 edict_t *findradius(edict_t *from, vec3_t org, float rad);
 edict_t *G_PickTarget(char *targetname);
+int     G_WindowFrame(int framenum);
+int     G_GridFrames(float seconds);
 void    G_UseTargets(edict_t *ent, edict_t *activator);
 void    G_SetMovedir(vec3_t angles, vec3_t movedir);
 

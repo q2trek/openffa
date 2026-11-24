@@ -545,6 +545,12 @@ void SP_func_object(edict_t *self)
 // miscellaneous specialty items
 //
 
+static int misc_animation_start_frame(int frames)
+{
+    // Short map animations keep their original deadlines during settling.
+    return level.framenum ? KEYFRAME(frames) : frames;
+}
+
 /*QUAKED misc_blackhole (1 .5 0) (-8 -8 -8) (8 8 8)
 */
 
@@ -577,7 +583,7 @@ void SP_misc_blackhole(edict_t *ent)
     ent->s.renderfx = RF_TRANSLUCENT;
     ent->use = misc_blackhole_use;
     ent->think = misc_blackhole_think;
-    ent->nextthink = KEYFRAME(2 * FRAMEDIV);
+    ent->nextthink = misc_animation_start_frame(2 * FRAMEDIV);
     gi.linkentity(ent);
 }
 
@@ -601,7 +607,7 @@ void SP_misc_eastertank(edict_t *ent)
     ent->s.modelindex = gi.modelindex("models/monsters/tank/tris.md2");
     ent->s.frame = 254;
     ent->think = misc_eastertank_think;
-    ent->nextthink = KEYFRAME(2 * FRAMEDIV);
+    ent->nextthink = misc_animation_start_frame(2 * FRAMEDIV);
     gi.linkentity(ent);
 }
 
@@ -626,7 +632,7 @@ void SP_misc_easterchick(edict_t *ent)
     ent->s.modelindex = gi.modelindex("models/monsters/bitch/tris.md2");
     ent->s.frame = 208;
     ent->think = misc_easterchick_think;
-    ent->nextthink = KEYFRAME(2 * FRAMEDIV);
+    ent->nextthink = misc_animation_start_frame(2 * FRAMEDIV);
     gi.linkentity(ent);
 }
 
@@ -651,7 +657,7 @@ void SP_misc_easterchick2(edict_t *ent)
     ent->s.modelindex = gi.modelindex("models/monsters/bitch/tris.md2");
     ent->s.frame = 248;
     ent->think = misc_easterchick2_think;
-    ent->nextthink = KEYFRAME(2 * FRAMEDIV);
+    ent->nextthink = misc_animation_start_frame(2 * FRAMEDIV);
     gi.linkentity(ent);
 }
 
@@ -725,7 +731,8 @@ void SP_misc_banner(edict_t *ent)
     ent->s.renderfx |= RF_NOSHADOW;
     gi.linkentity(ent);
 
-    NEXT_KEYFRAME(ent, misc_banner_think);
+    ent->think = misc_banner_think;
+    ent->nextthink = misc_animation_start_frame(FRAMEDIV);
 }
 
 /*QUAKED misc_viper (1 .5 0) (-16 -16 0) (16 16 32)
